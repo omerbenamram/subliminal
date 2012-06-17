@@ -19,6 +19,7 @@ from ..cache import Cache
 from ..exceptions import DownloadFailedError, ServiceError
 from ..language import language_set, Language
 from ..subtitles import EXTENSIONS
+import pysrt
 import logging
 import os
 import requests
@@ -160,6 +161,11 @@ class ServiceBase(object):
     def download(self, subtitle):
         """Download a subtitle"""
         self.download_file(subtitle.link, subtitle.path)
+        try:
+            pysrt.SubRipFile.open(subtitle.path)
+        except (pysrt.Error, UnicodeDecodeError):
+            os.remove(subtitle.path)
+            raise DownloadFailedError('Not a valid subtitle file')
 
     @classmethod
     def check_validity(cls, video, languages):
