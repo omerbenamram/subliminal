@@ -25,6 +25,7 @@ import os
 import requests
 import threading
 import zipfile
+import codecs
 
 
 __all__ = ['ServiceBase', 'ServiceConfig']
@@ -162,8 +163,10 @@ class ServiceBase(object):
         """Download a subtitle"""
         self.download_file(subtitle.link, subtitle.path)
         try:
-            pysrt.SubRipFile.open(subtitle.path)
-        except (pysrt.Error, UnicodeDecodeError):
+            with codecs.open(subtitle.path, 'rU', errors='replace') as f:
+                for _ in pysrt.SubRipFile.stream(f):
+                    pass
+        except pysrt.Error:
             os.remove(subtitle.path)
             raise DownloadFailedError('Not a valid subtitle file')
 
